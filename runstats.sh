@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VISITORS=/usr/bin/visitors
-ACCESSLOG=/var/log/apache/andrewmoore.com/access.log*
+ACCESSLOG=/var/log/apache2/andrewmoore.com/access.log*
 WORKDIR=/home/amoore/public_html
 OUTPUT=$WORKDIR/stats.html
 PREFIX="--prefix http://andrewmoore.com --prefix http://www.andrewmoore.com "

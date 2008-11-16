@@ -1,0 +1,327 @@
+;; http://www.emacswiki.org/cgi-bin/wiki/LoadPath
+; (add-to-list 'load-path "~/elisp")
+(add-to-list 'load-path "~/site-lisp")
+
+;; from jay Bingham: http://www.geocrawler.com/archives/3/339/2001/6/0/6064358/
+(defvar tl_dts-format-string "%b %e, %Y %H:%M:%S"
+  "A string specifying the format of the date-time stamp.
+Refer to the documentation for format-time-string for an explanation of the
+meta characters available for use in this string.  Non-meta characters will
+be inserted into the buffer without interpretation.")
+;; Function: insert-dts
+;;   Insert the date and time into the current buffer at the currentlocation.
+(defun insert-dts ()
+  "Insert the date and time into the current buffer at the current location.
+See the documentation for tl_dts-format-string to change the format of the
+date-time stamp."
+  (interactive)
+  (insert (format-time-string tl_dts-format-string (current-time))))
+
+;; This is how I sign my comments.
+(defvar tl_sign-comment-format-string "-- amoore %b %e, %Y"
+  "A string specifying the format of the date-time stamp.
+Refer to the documentation for format-time-string for an explanation of the
+meta characters available for use in this string.  Non-meta characters will
+be inserted into the buffer without interpretation.")
+;; Function: sign-comment
+;;   Insert my name and current date into the current buffer at the currentlocation.
+(defun sign-comment ()
+  "Insert the date and time into the current buffer at the current location.
+See the documentation for tl_dts-format-string to change the format of the
+date-time stamp."
+  (interactive)
+  (insert (format-time-string tl_sign-comment-format-string (current-time))))
+
+;;; http://www.emacswiki.org/cgi-bin/wiki/CPerlMode
+;;; cperl-mode is preferred to perl-mode
+;;; "Brevity is the soul of wit" <foo at acm.org>
+(defalias 'perl-mode 'cperl-mode)
+(setq cperl-invalid-face nil)
+(setq cperl-electric-keywords t) ;; expands for keywords such as foreach, while
+;(setq cperl-hairy t)
+; (setq cperl-electric-parens t)
+
+;; turn autoindenting on
+(global-set-key "\r" 'newline-and-indent)
+
+(setq auto-mode-alist (cons '("\\.t$" . cperl-mode) auto-mode-alist))
+
+;; from http://use.perl.org/comments.pl?sid=21865&cid=33224
+;; and from Perl Best Practices
+(custom-set-variables
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(case-fold-search t)
+ '(cperl-close-paren-offset -4)
+ '(cperl-continued-statement-offset 2)
+ '(cperl-indent-level 4)
+ '(cperl-label-offset 0)
+ '(cperl-tab-always-indent t)
+ '(current-language-environment "UTF-8")
+ '(default-input-method "rfc1345")
+ '(indent-tabs-mode nil)
+ '(muse-project-alist (quote (("WikiPlanner" ("~/Plans" :default "index" :major-mode planner-mode :visit-link planner-visit-link)))))
+ '(safe-local-variable-values (quote ((c-indentation-style . bsd))))
+ '(show-paren-mode t nil (paren))
+ '(sql-ms-program "/home/amoore/dev/fakesqsh"))
+
+
+;; let hashes indent normally
+'(cperl-indent-parens-as-block t)
+'(cperl-close-paren-offset -4)
+
+
+;; from Perl Best Practices
+;; Set line width to 78 columns...
+(setq fill-column 78)
+(setq auto-fill-mode t)
+
+;; ;; from Joshua ben Jore <twists@gmail.com> on the perlcritic mailing list
+;; (autoload 'perlcritic        "perlcritic" "" t)
+;; (autoload 'perlcritic-region "perlcritic" "" t)
+;; (autoload 'perlcritic-mode   "perlcritic" "" t)
+;; (eval-after-load "cperl-mode"
+;;   '(add-hook 'cperl-mode-hook 'perlcritic-mode))
+;; (eval-after-load "perl-mode"
+;;   '(add-hook 'perl-mode-hook 'perlcritic-mode))
+
+;; automatically insert some text on some kinds of new buffers
+;;(require 'autoinsert)
+;;(auto-insert-mode)  ;;; Adds hook to find-files-hook
+;;(setq auto-insert-directory "~/.emacstemplates/") ;;; Or use custom, *NOTE* Trailing slash important
+;;(setq auto-insert-query nil) ;;; If you don't want to be prompted before insertion
+;;(define-auto-insert "svn-commit.tmp" "svncommit.txt")
+;;(define-auto-insert "\.pl" "perl.txt")
+;;(define-auto-insert "\.xhtml" "xhtml.txt")
+
+
+;; from Perl Best Practices
+;; Use % to match various kinds of brackets...
+;; See: http://www.lifl.fr/~hodique/uploads/Perso/patches.el
+(global-set-key "%" 'match-paren)
+(defun match-paren (arg)
+  "Go to the matching paren if on a paren; otherwise insert %."
+  (interactive "p")
+  (let ((prev-char (char-to-string (preceding-char)))
+        (next-char (char-to-string (following-char))))
+    (cond ((string-match "[[{(<]" next-char) (forward-sexp 1))
+          ((string-match "[\]})>]" prev-char) (backward-sexp 1))
+          (t (self-insert-command (or arg 1))))))
+
+;; from Perl Best Practices
+;; Expand the following abbreviations while typing in text files...
+(abbrev-mode 1)
+(define-abbrev-table 'global-abbrev-table '(
+    ("pdbg"   "use Data::Dumper qw( Dumper );\nwarn Dumper[];"   nil 1)
+    ("phbp"   "#! /usr/bin/perl -w"                              nil 1)
+    ("pbmk"   "use Benchmark qw( cmpthese );\ncmpthese -10, {};" nil 1)
+    ("pusc"   "use Smart::Comments;\n\n### "                     nil 1)
+    ("putm"   "use Test::More 'no_plan';"                        nil 1)
+    ))
+(add-hook 'text-mode-hook (lambda () (abbrev-mode 1)))
+
+
+;; the emacs server so that svn commits can come here
+(server-start) ;; emacs 21?
+;;(gnuserv-start) ;; emacs 22?
+
+;; pretty print stuff
+; (global-font-lock-mode)
+
+(setq tramp-default-method "ssh")
+
+;; dos2unix from Benjamin Rutt's .emacs
+(defun dos2unix () (interactive) (goto-char (point-min)) (while (search-forward "\r" nil t) (replace-match "")))
+
+
+(autoload 'xml-mode "psgml" "Major mode to edit XML files." t)
+(setq auto-mode-alist
+       (nconc
+         '(("\\.xhtml$" . xml-mode))
+         '(("\\.xml$" . xml-mode))
+         auto-mode-alist))
+
+(add-hook 'xml-mode-hook   ; XML-specific settings
+        (function (lambda()
+
+; faces creation
+(make-face 'sgml-comment-face)
+(make-face 'sgml-start-tag-face)
+(make-face 'sgml-end-tag-face)
+(make-face 'sgml-doctype-face)
+
+; faces definitions
+(set-face-foreground 'sgml-comment-face "SeaGreen")
+(set-face-foreground 'sgml-start-tag-face "OrangeRed")
+(set-face-foreground 'sgml-end-tag-face "OrangeRed")
+(set-face-foreground 'sgml-doctype-face "MintCream")
+
+; markup to face mappings
+; (see http://www.lysator.liu.se/~lenst/about_psgml/psgml.html#Highlight for details)
+(setq sgml-markup-faces
+      '((comment . sgml-comment-face)
+        (start-tag . sgml-start-tag-face)
+        (end-tag . sgml-end-tag-face)
+        (doctype . sgml-doctype-face)
+        )
+      )
+
+; turn faces on
+(setq sgml-set-face t)
+
+)))
+
+(diary)
+(setq diary-mail-addr "amoore@examinetics.com")
+
+; diary and appt-mode work together
+; from http://www.emacswiki.org/cgi-bin/wiki/AppointmentMode
+; make it so that M-x appt-add will remind me of meetings.
+(appt-activate 1)
+
+(global-set-key "\M- " 'hippie-expand)
+
+
+(defun svndocdiff-current ()
+  "Invoke svn docdiff for the current buffer,
+and run mozilla-firefox -remote openfile(filename)
+to preview the diff"
+  (interactive)
+  (let* ((currentname
+          (buffer-file-name (current-buffer)))
+         (svnorigname
+          (concat default-directory
+                  ".svn/text-base/"
+                  (file-name-nondirectory
+                   (buffer-file-name (current-buffer)))
+                  ".svn-base"))
+         (diff-command
+          "/usr/bin/docdiff --html %s %s > %s")
+         (mozilla-command-line
+          "kfmclient newTab '%s'")
+         (moztmpfile-name
+          (concat default-directory
+                  ".svn/.docdifftmp.html")))
+    (save-buffer)
+    (shell-command
+     (format diff-command
+             svnorigname
+             currentname
+             moztmpfile-name)
+     "*svndocdiff*" "*svndocdiff-err*")
+    (shell-command
+     (format mozilla-command-line
+             moztmpfile-name)
+     "*svndocdiff*" "*svndocdiff-err*")))
+
+
+; mutt
+; (server-start)
+; (add-to-list 'auto-mode-alist '("/mutt" . mail-mode))
+
+(setq auto-mode-alist
+      (cons '("/mutt" . mail-mode) auto-mode-alist))
+
+; .muttrc
+; (setq auto-mode-alist
+;       (cons '("/.muttrc" . muttrc-mode) auto-mode-alist))
+
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ )
+
+
+;; ;; remem
+;; (load "remem.el")
+;; (setq remem-prog-dir "/usr/bin")
+;; (setq remem-database-dir "/home/amoore/RA-indexes")
+;; (setq remem-scopes-list '(("mail" 6 5 500)
+;;                           ("docs" 2 10 500)))
+
+;; http://sachachua.com/wp/2008/01/13/capturing-notes-with-remember/
+(setq remember-data-file "~/docs/remember.txt")
+;;(global-set-key (kbd "C-c r") 'remember)
+
+
+;; http://www.emacswiki.org/cgi-bin/wiki/PlannerModeFromScratch
+
+;; from http://www.cabochon.com/~stevey/blog-rants/effective-emacs.html
+; (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+
+
+
+;; (shell)
+
+;; I should include the perltidy mode in here:
+;; http://perlcritic.tigris.org/servlets/ReadMsg?list=dev&msgNo=347
+
+(mouse-avoidance-mode 'exile)
+(mouse-wheel-mode t)
+
+
+;; hit Crtl-o while you're searching to find all Occurrances of that string.
+;; http://www.perlmonks.org/index.pl?node_id=539546
+(defun isearch-occur ()
+  "Invoke `occur' from within isearch."
+  (interactive)
+  (let ((case-fold-search isearch-case-fold-search))
+    (occur (if isearch-regexp isearch-string (regexp-quote isearch-string)))))
+(define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
+
+
+;; http://en.wikipedia.org/wiki/Wikipedia:Wikipedia-mode.el
+(autoload 'wikipedia-mode "wikipedia-mode.el"
+  "Major mode for editing documents in Wikipedia markup." t)
+
+(setq muse-project-alist
+      '(("WikiPlanner"
+	 ("~/Plans"   ;; Or wherever you want your planner files to be
+	  :default "index"
+	  :major-mode planner-mode
+	  :visit-link planner-visit-link))))
+(require 'planner)
+
+(require 'mmm-auto)
+;; http://www.masonhq.com/?MMMModeForEmacs
+(setq mmm-global-mode 'maybe)
+;; (html-mode "\\.html\\'" mason)         ;; Any .html file in html-mode
+;; (nil "\\.\\(mason\\|html\\)\\'" mason) ;; All .mason and .html files
+;; (nil "\\`/var/www/mason/" mason)       ;; Any file in the directory
+;; (nil "\\`xmnetwork_htdocs/" mason)       ;; Any file in the directory
+
+; make mason pages be in html-mode
+(add-to-list 'auto-mode-alist '("\\handler\\'" . html-mode))
+
+;; These pages will help you fix the color scheme.
+;; http://www.emacswiki.org/cgi-bin/wiki/ColorsAndKde
+;; http://www.cs.cmu.edu/~maverick/GNUEmacsColorThemeTest/index.html
+;; http://www.emacswiki.org/cgi-bin/wiki?ColorTheme
+(require 'color-theme)
+(setq color-theme-is-global t)
+(color-theme-calm-forest)
+
+;; http://www.emacsblog.org/2007/05/17/package-faves-psvn/
+(setq svn-status-hide-unmodified 't)
+
+;; from http://pyside.blogspot.com/2008/02/there-are-many-things-you-can-say-about.html
+;; More powerful tab-completion
+;; (add-hook 'minibuffer-setup-hook
+;;           '(lambda ()
+;;              (define-key minibuffer-local-map "\t" 'comint-dynamic-complete)))
+
+;; from http://pyside.blogspot.com/2008/02/there-are-many-things-you-can-say-about.html
+;; Window frame title   
+(setq frame-title-format "%b %*%+ %f")
+(setq icon-title-format "%b")
+
+;; from http://pyside.blogspot.com/2008/02/there-are-many-things-you-can-say-about.html
+(global-set-key (kbd "M-#") 'comment-region)
+(font-lock-add-keywords 'cperl-mode
+ '(("\\<\\(FIXME\\|HACK\\|XXX\\|TODO\\)" 1 font-lock-warning-face prepend)))

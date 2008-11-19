@@ -11,6 +11,7 @@ use Git::Wrapper;
 use File::Copy;
 use File::Spec;
 use Time::localtime;
+use Date::Calc qw( Today );
 
 our %args = process_command_line_arguments();
 format_patches()  if $args{'format-patches'};
@@ -18,9 +19,7 @@ archive_patches() if $args{'archive-patches'};
 
 our $bz = connect_to_bugzilla();
 add_all_patches();
-add_comment();
-$bz->change_status('assigned');
-$bz->commit unless $args{'dry-run'};
+update_bug();
 
 sub connect_to_bugzilla {
     my $bz = WWW::Bugzilla->new(
@@ -98,7 +97,7 @@ sub get_bugnumber_from_branch_name {
 sub format_patches {
     my $git    = Git::Wrapper->new('.');
     my $method = 'format-patch';           # perl doesn't like dashes in method names.
-    $git->$method( { numbered => 1, 'cover-letter' => 1 }, 'origin', '-M', '-B' );
+    $git->$method( { numbered => 1, 'cover-letter' => 1, 'output-directory' => patch_archive_directory() }, 'origin', '-M', '-B' );
     return;
 }
 
@@ -113,7 +112,7 @@ sub patch_base_directory {
 }
 
 sub patch_archive_directory {
-    my $datestring = join( localtime->year() + 1900, localtime->mon() + 1, localtime->mday() ) . '-' . join( localtime->hour(), localtime->min(), localtime->sec() );
+    my $datestring = join( '', localtime->year() + 1900, localtime->mon() + 1, localtime->mday() ) . '-' . join( '', localtime->hour(), localtime->min(), localtime->sec() );
     my $patch_archive_directory = File::Spec->catfile( patch_base_directory(), $datestring );
     unless ( -d $patch_archive_directory ) {
         mkdir $patch_archive_directory
@@ -178,8 +177,21 @@ sub get_comment_from_patch {
     return 'comment';
 }
 
+sub update_bug { 
+
+    $bz->work_time( $args{'hours'} ) if $args{'hours'};
+    add_comment();
+    $bz->change_status('assigned');
+    $bz->commit unless $args{'dry-run'};
+}
+
 sub add_comment {
-    my $comment = 'recording time worked';
+    my $comment = '';
+    $comment .= "hours worked: $args{'hours'}\n\n" if $args{'hours'};
+    my $directory = patch_archive_directory();
+    if ( -d $directory ) {
+        $comment .= "current patch archive: $directory\n\n";
+    }
 
     return $bz->additional_comments($comment);
 }

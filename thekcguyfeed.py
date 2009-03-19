@@ -17,6 +17,7 @@ import urllib
 import re
 import cPickle
 import xml.sax.saxutils
+from HTMLParser import HTMLParser
 
 #
 # Settings
@@ -32,11 +33,11 @@ settings = {
 # ...for Featured Articles
 settings_fa = {
 	'entries': 10,
-	'output_filename': '/home/www/thekcguy.com/TheKCGuy_daily_rss.xml',
-	'cache_filename': '/tmp/TheKCGuy_daily.pickle',
-	'url': 'http://thekcguy.com/wiki/index.php/%(month)s_%(day)d%%2C_%(year)d',
-	'rss_title': 'Kansas City News and Events',
-	'rss_link': 'http://thekcguy.com/',
+	'output_filename': '/tmp/example.xml',
+	'cache_filename': '/tmp/example.pickle',
+	'url': 'http://www.thekcguy.com/Kansas_City/%(month)s_%(day)d%%2C_%(year)d',
+	'rss_title': 'TheKCGuy\'s Kansas City News and Events',
+	'rss_link': 'http://www.thekcguy.com/',
 	'rss_description': 'RSS feed of the daily news and events from thekcguy.com'
 	}
 
@@ -101,21 +102,49 @@ class WPCache:
 		p = cPickle.Pickler(file)
 		p.dump(self.cache)
 		
+
+# this HTMLParser will do two things:
+# 1) find the content of the article between the start and end comment tags that mediawiki adds
+# 2) make relative URLs into absoulute URLs
+class MyHTMLParser(HTMLParser):
+	in_content = False
+	current_content = ''
+	def handle_comment(self, comment):
+		''' ASSUMPTION: Content of article is between <!-- start content --> and <!-- end content -->'''
+		if comment == ' start content ':
+			print 'entering content'
+			self.in_content = True
+		if comment == ' end content ':
+			print 'leaving content'
+			self.in_content = False
+	def handle_data(self, data):
+		if self.in_content:
+			self.current_content += data
+	def handle_starttag( self, tag, attrs ):
+		if self.in_content:
+			attribute_string = ''
+			for attr in attrs:
+				if tag == 'a' and attr[0] == 'href':
+					attr = ( attr[0], self.make_url_absolute( attr[1] ) )
+				attribute_string += '%(name)s="%(value)s"' % { 'name': attr[0], 'value': attr[1] } + ' '
+			self.current_content += '<%(tag)s %(attribute_string)s>' % \
+				{ 'tag': tag, 'attribute_string' : attribute_string }
+	def handle_endtag( self, tag ):
+		if self.in_content:
+			self.current_content += '</%(tag)s>' % { 'tag': tag }
+	def get_content(self):
+		return self.current_content
+	def make_url_absolute(self, url):
+		return settings['rss_link'] + url
+
 # Get the content of the article
 #
-# ASSUMPTION: Content of article is between <!-- start content --> and <!-- end content -->
-# ASSUMPTION: only part of article before the first </p> should be shown, if it exists
-
-re_content = re.compile('<!--\s*start\s+content\s*-->(.*)<!--\s*end\s+content\s*-->', re.DOTALL)
-re_break   = re.compile('(.*?)<\/p>', re.DOTALL)
 def get_content(s):
-	m = re_content.search(s)
-	wholepage = m.group(1)
-	m = re_break.search( wholepage )
-	if m == None:
-		return wholepage
-	else:
-		return m.group(1) + "\n<br><br>(Article continues...)\n"
+	parser = MyHTMLParser()
+	parser.feed(s)
+	content = parser.get_content()
+	parser.close()
+	return content
 
 # Get title of article - expects html filtered by get_content
 #
@@ -227,4 +256,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-

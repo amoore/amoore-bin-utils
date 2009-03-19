@@ -112,10 +112,8 @@ class MyHTMLParser(HTMLParser):
 	def handle_comment(self, comment):
 		''' ASSUMPTION: Content of article is between <!-- start content --> and <!-- end content -->'''
 		if comment == ' start content ':
-			print 'entering content'
 			self.in_content = True
 		if comment == ' end content ':
-			print 'leaving content'
 			self.in_content = False
 	def handle_data(self, data):
 		if self.in_content:

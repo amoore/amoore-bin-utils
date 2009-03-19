@@ -33,8 +33,8 @@ settings = {
 # ...for Featured Articles
 settings_fa = {
 	'entries': 10,
-	'output_filename': '/tmp/example.xml',
-	'cache_filename': '/tmp/example.pickle',
+	'output_filename': '/home/www/thekcguy.com/TheKCGuy_daily_rss.xml',
+	'cache_filename': '/tmp/TheKCGuy_daily.pickle',
 	'url': 'http://www.thekcguy.com/Kansas_City/%(month)s_%(day)d%%2C_%(year)d',
 	'rss_title': 'TheKCGuy\'s Kansas City News and Events',
 	'rss_link': 'http://www.thekcguy.com/',

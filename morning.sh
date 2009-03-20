@@ -12,7 +12,7 @@ say_greeting() {
 copy_podcasts() {
 
     PODSOURCE=/home/amoore/simpleshare/bashpodder
-    PODDEST=/media/disk-1
+    PODDEST=/media/usb0
     
     # make sure that the flash drive is mounted
     if [ ! -d $PODDEST/lost+found ] ; then
@@ -21,10 +21,10 @@ copy_podcasts() {
     fi
     
     # purge flash drive of old podcast directories
-    sudo rm -rf $PODDEST/2007*
+    sudo rm -rf $PODDEST/2008*
     
     # copy podcasts from bashpodder directory to flashdrive
-    for podday in $(ls -d /home/amoore/simpleshare/bashpodder/2007* | sort -r) ; do
+    for podday in $(ls -d /home/amoore/simpleshare/bashpodder/2008* | sort -r) ; do
 	echo "copying $podday"
 	sudo cp -a $podday $PODDEST
 	if [ $? -eq 1 ] ; then
@@ -39,7 +39,7 @@ copy_podcasts() {
 
 
 say_greeting
-copy_podcasts
+# copy_podcasts
 
 
 

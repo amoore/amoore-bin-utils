@@ -18,6 +18,7 @@ import re
 import cPickle
 import xml.sax.saxutils
 from HTMLParser import HTMLParser
+import PyRSS2Gen
 
 #
 # Settings
@@ -26,18 +27,18 @@ from HTMLParser import HTMLParser
 # ...General
 settings = {
 	'rss_webmaster': 'thekcguy@gmail.com',
-	'program_name': 'Fafafa',
-	'version': '0.8.1'
+	'program_name':  'Fafafa',
+	'version':       '0.8.1'
 	}
 
 # ...for Featured Articles
 settings_fa = {
 	'entries': 10,
 	'output_filename': '/home/www/thekcguy.com/TheKCGuy_daily_rss.xml',
-	'cache_filename': '/tmp/TheKCGuy_daily.pickle',
-	'url': 'http://www.thekcguy.com/Kansas_City/%(month)s_%(day)d%%2C_%(year)d',
-	'rss_title': 'TheKCGuy\'s Kansas City News and Events',
-	'rss_link': 'http://www.thekcguy.com/',
+	'cache_filename':  '/tmp/TheKCGuy_daily.pickle',
+	'url':             'http://www.thekcguy.com/Kansas_City/%(month)s_%(day)d%%2C_%(year)d',
+	'rss_title':       'TheKCGuy\'s Kansas City News and Events',
+	'rss_link':        'http://www.thekcguy.com/',
 	'rss_description': 'RSS feed of the daily news and events from thekcguy.com'
 	}
 
@@ -140,7 +141,7 @@ class MyHTMLParser(HTMLParser):
 # Get the content of the article
 #
 def get_content(s):
-	parser = MyHTMLParser()
+	parser  = MyHTMLParser()
 	parser.feed(s)
 	content = parser.get_content()
 	parser.close()
@@ -180,48 +181,27 @@ def rss_item(date, content):
 		title = "%s %d" % (months[date.month - 1], date.day)
 	else:
 		title = "%s %d: %s" % (months[date.month - 1], date.day, get_title(content))
-	return """<item>
-<title>%(title)s</title>
-<link>%(url)s</link>
-<description>%(escaped_content)s</description>
-</item>
-""" % {
-		'title': title,
-		'url': get_url(date),
-		'escaped_content': xml.sax.saxutils.escape(content)}
+	return PyRSS2Gen.RSSItem(
+		title       = title,
+		link        = get_url( date ),
+		description = xml.sax.saxutils.escape(content),
+		pubDate	    = datetime.datetime(date.year, date.month, date.day),
+		guid	    = PyRSS2Gen.Guid( get_url( date ) ),
+		)
 
 # Puts the final RSS together
 
-def rss(items):
-	return """<?xml version="1.0" encoding="UTF-8"?>
-	<rss version="2.0" xmlns:blogChannel="http://backend.userland.com/blogChannelModule">
-
-<channel>
-<title>%(rss_title)s</title>
-<link>%(rss_link)s</link>
-<description>%(rss_description)s</description>
-<language>en-us</language>
-<copyright>GNU Free Documentation License</copyright>
-<lastBuildDate>%(build_date)s</lastBuildDate>
-<docs>http://blogs.law.harvard.edu/tech/rss</docs>
-<webMaster>%(webmaster)s</webMaster>
-<generator>%(generator)s</generator>
-
-%(items)s
-
-</channel>
-</rss>
-""" % {
-'rss_title': settings['rss_title'],
-'rss_link': settings['rss_link'],
-'rss_description': settings['rss_description'],
-'webmaster': settings['rss_webmaster'],
-'build_date': time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()),
-'items': items,
-'generator': settings['program_name'] + " " + settings['version'] }
+def make_rss(items):
+	rss = PyRSS2Gen.RSS2(
+		title         = settings['rss_title'],
+		link          = settings['rss_link'],
+		description   = settings['rss_description'],
+		lastBuildDate = datetime.datetime.now(),
+		items         = items
+		)
+        return rss
 
 # Main
-
 def main():
 	# Primitive command line parsing
 	settings.update(settings_fa)
@@ -241,14 +221,11 @@ def main():
 			content = ''
 		return rss_item(date, content)
 
-	# Iterate over the items
-	items = string.join([item(date) for date in dates], "")
-	the_rss = rss(items)
+	items = [item(date) for date in dates]
+	rss = make_rss(items)
 
 	# Write to file
-	file = open(settings['output_filename'], "w")
-	file.write(the_rss)
-	file.close()
+	rss.write_xml(open(settings['output_filename'], "w"))
 	
 	cache.save()
 

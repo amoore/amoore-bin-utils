@@ -120,20 +120,22 @@ class MyHTMLParser(HTMLParser):
 			self.current_content += data
 	def handle_starttag( self, tag, attrs ):
 		if self.in_content:
-			attribute_string = ''
+			tag_contents = [ tag ]
 			for attr in attrs:
 				if tag == 'a' and attr[0] == 'href':
 					attr = ( attr[0], self.make_url_absolute( attr[1] ) )
-				attribute_string += '%(name)s="%(value)s"' % { 'name': attr[0], 'value': attr[1] } + ' '
-			self.current_content += '<%(tag)s %(attribute_string)s>' % \
-				{ 'tag': tag, 'attribute_string' : attribute_string }
+				tag_contents.append( '%(name)s="%(value)s"' % { 'name': attr[0], 'value': attr[1] } )
+			self.current_content += '<' + string.join( tag_contents, ' ' ) + '>'
 	def handle_endtag( self, tag ):
 		if self.in_content:
 			self.current_content += '</%(tag)s>' % { 'tag': tag }
 	def get_content(self):
 		return self.current_content
 	def make_url_absolute(self, url):
-		return settings['rss_link'] + url
+		if settings['rss_link'].endswith('/'):
+			return settings['rss_link'][0:-1] + url
+		else:
+			return settings['rss_link'] + url
 
 # Get the content of the article
 #

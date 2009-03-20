@@ -16,7 +16,6 @@ import time
 import urllib
 import re
 import cPickle
-import xml.sax.saxutils
 from HTMLParser import HTMLParser
 import PyRSS2Gen
 
@@ -184,7 +183,7 @@ def rss_item(date, content):
 	return PyRSS2Gen.RSSItem(
 		title       = title,
 		link        = get_url( date ),
-		description = xml.sax.saxutils.escape(content),
+		description = content,
 		pubDate	    = datetime.datetime(date.year, date.month, date.day),
 		guid	    = PyRSS2Gen.Guid( get_url( date ) ),
 		)

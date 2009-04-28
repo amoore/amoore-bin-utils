@@ -35,10 +35,12 @@ settings_fa = {
 	'entries': 10,
 	'output_filename': '/home/www/thekcguy.com/TheKCGuy_daily_rss.xml',
 	'cache_filename':  '/tmp/TheKCGuy_daily.pickle',
+	# 'output_filename': '/tmp/TheKCGuy_daily_rss_test.xml',
+	# 'cache_filename':  '/tmp/TheKCGuy_daily_test.pickle',
 	'url':             'http://www.thekcguy.com/Kansas_City/%(month)s_%(day)d%%2C_%(year)d',
 	'rss_title':       'TheKCGuy\'s Kansas City News and Events',
 	'rss_link':        'http://www.thekcguy.com/',
-	'rss_description': 'RSS feed of the daily news and events from thekcguy.com'
+	'rss_description': 'TheKCGuy\'s Kansas City News and Events'
 	}
 
 
@@ -122,8 +124,8 @@ class MyHTMLParser(HTMLParser):
 		if self.in_content:
 			tag_contents = [ tag ]
 			for attr in attrs:
-				if tag == 'a' and attr[0] == 'href':
-					attr = ( attr[0], self.make_url_absolute( attr[1] ) )
+				if tag == 'a' and attr[0] == 'href' and attr[1][0] =='/':
+					attr = ( attr[0], self.make_url_absolute( attr[1] ), attr[2:] )
 				tag_contents.append( '%(name)s="%(value)s"' % { 'name': attr[0], 'value': attr[1] } )
 			self.current_content += '<' + string.join( tag_contents, ' ' ) + '>'
 	def handle_endtag( self, tag ):

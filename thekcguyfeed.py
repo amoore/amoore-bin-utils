@@ -18,6 +18,7 @@ import re
 import cPickle
 from HTMLParser import HTMLParser
 import PyRSS2Gen
+import getopt
 
 #
 # Settings
@@ -61,9 +62,6 @@ def get_url(date):
 class MyURLopener(urllib.URLopener):
 	version = settings['program_name'] + "/" + settings['version']
 
-def too_old(date):
-	return (datetime.date.today() - date).days > settings['entries']
-
 # Caching of HTML from Wikipedia
 
 class CacheItem:
@@ -94,10 +92,17 @@ class WPCache:
 			self.cache[date] = cacheitem
 			return html
 
+	def too_old(self, date):
+		return (datetime.date.today() - date).days > settings['entries']
+
 	# Weed out old entries, so cache doesn't get big
 	def weed_out_old(self):
-		self.cache = dict([x for x in self.cache.items() if not too_old(x[0])])
+		self.cache = dict([x for x in self.cache.items() if not self.too_old(x[0])])
 		
+	def remove_today(self):
+		today = datetime.date.today()
+		del self.cache[today]
+
 	def save(self):
 		self.weed_out_old()
 		file = open(self.filename, "w")
@@ -204,7 +209,7 @@ def make_rss(items):
 
 # Main
 def main():
-	# Primitive command line parsing
+	# These should probably be command line options, but for now they're hard-coded.
 	settings.update(settings_fa)
 
 	today = datetime.date.today()
@@ -212,6 +217,22 @@ def main():
 
 	cache = WPCache(settings['cache_filename'])
 	
+	# process command line arguments
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "", ["redo-today"])
+	except getopt.GetoptError, err:
+		# print help information and exit:
+		print str(err)
+		usage()
+		sys.exit(2)
+	output = None
+	verbose = False
+	for o, a in opts:
+		if o == "--redo-today":
+			cache.remove_today()
+		else:
+			assert False, "unhandled option"
+
 	dates = [today - one_day*x for x in range(settings['entries'])]
 
 	def item(date):

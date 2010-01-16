@@ -88,6 +88,7 @@ if [ -f /etc/bash_completion ]; then
 fi
 
 export EDITOR=/usr/bin/vim
+# export EDITOR=/usr/bin/mg
 
 PATH=$HOME/bin
 for dir in  /usr/local/bin \
@@ -114,4 +115,17 @@ export PATH
 
 export LESS="-R -m"
 
+# http://www.emacswiki.org/emacs/AnsiTermHints
+function set-eterm-dir {
+    echo -e "\033AnSiTu" $(whoami)
+    echo -e "\033AnSiTc" $(pwd)
+    echo -e "\033AnSiTh" $(hostname -f)
+    history -a                  # write history to disk
+}
 
+# track directory, username, and cwd for remote logons
+if [ $TERM = eterm-color ]; then
+    PROMPT_COMMAND=set-eterm-dir
+fi
+
+# export JAVA_HOME=/usr/lib/fjsdk

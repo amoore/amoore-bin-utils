@@ -1,6 +1,7 @@
 ;; http://www.emacswiki.org/cgi-bin/wiki/LoadPath
 ; (add-to-list 'load-path "~/elisp")
 (add-to-list 'load-path "~/site-lisp")
+(add-to-list 'load-path "~/.elisp")
 
 ;; from jay Bingham: http://www.geocrawler.com/archives/3/339/2001/6/0/6064358/
 (defvar tl_dts-format-string "%b %e, %Y %H:%M:%S"
@@ -53,19 +54,22 @@ date-time stamp."
   ;; If you edit it by hand, you could mess it up, so be careful.
   ;; Your init file should contain only one such instance.
   ;; If there is more than one, they won't work right.
+ '(browse-url-browser-function (quote browse-url-firefox))
  '(case-fold-search t)
  '(cperl-close-paren-offset -4)
  '(cperl-continued-statement-offset 2)
- '(cperl-indent-level 4)
+ '(cperl-indent-level 2)
  '(cperl-label-offset 0)
  '(cperl-tab-always-indent t)
  '(current-language-environment "UTF-8")
  '(default-input-method "rfc1345")
  '(indent-tabs-mode nil)
  '(muse-project-alist (quote (("WikiPlanner" ("~/Plans" :default "index" :major-mode planner-mode :visit-link planner-visit-link)))))
+ '(org-agenda-files (quote ("~/Documents/Agendas/daily.org")))
  '(safe-local-variable-values (quote ((c-indentation-style . bsd))))
  '(show-paren-mode t nil (paren))
- '(sql-ms-program "/home/amoore/dev/fakesqsh"))
+ '(sql-ms-program "/home/amoore/dev/fakesqsh")
+ '(sql-mysql-options (quote ("-P 3307"))))
 
 
 ;; let hashes indent normally
@@ -174,7 +178,7 @@ date-time stamp."
 )))
 
 (diary)
-(setq diary-mail-addr "amoore@examinetics.com")
+(setq diary-mail-addr "amoore@indigointeractive.com")
 
 ; diary and appt-mode work together
 ; from http://www.emacswiki.org/cgi-bin/wiki/AppointmentMode
@@ -200,7 +204,7 @@ to preview the diff"
          (diff-command
           "/usr/bin/docdiff --html %s %s > %s")
          (mozilla-command-line
-          "kfmclient newTab '%s'")
+           "firefox %s")
          (moztmpfile-name
           (concat default-directory
                   ".svn/.docdifftmp.html")))
@@ -223,6 +227,19 @@ to preview the diff"
 
 (setq auto-mode-alist
       (cons '("/mutt" . mail-mode) auto-mode-alist))
+
+; http://fsinfo.noone.org/~abe/mutt/
+(defun axels-mail-mode-hook ()
+  (turn-on-auto-fill) ;;; Auto-Fill is necessary for mails
+  (turn-on-font-lock) ;;; Font-Lock is always cool *g*
+  (flush-lines "^\\(> \n\\)*> -- \n\\(\n?> .*\\)*") ;;; Kills quoted sigs.
+  (not-modified) ;;; We haven't changed the buffer, haven't we? *g*
+  (mail-text) ;;; Jumps to the beginning of the mail text
+   ; (setq make-backup-files nil) ;;; No backups necessary.
+  (local-set-key "\C-Xk" 'server-edit)
+  ) 
+
+(add-hook 'mail-mode-hook 'axels-mail-mode-hook)
 
 ; .muttrc
 ; (setq auto-mode-alist
@@ -325,3 +342,105 @@ to preview the diff"
 (global-set-key (kbd "M-#") 'comment-region)
 (font-lock-add-keywords 'cperl-mode
  '(("\\<\\(FIXME\\|HACK\\|XXX\\|TODO\\)" 1 font-lock-warning-face prepend)))
+
+
+;; http://www.emacswiki.org/emacs/CPerlMode
+(defun perltidy-region ()
+  "Run perltidy on the current region."
+  (interactive)
+  (save-excursion
+    (shell-command-on-region (point) (mark) "perltidy -q" nil t)))
+(defun perltidy-defun ()
+  "Run perltidy on the current defun."
+  (interactive)
+  (save-excursion (mark-defun)
+                  (perltidy-region)))
+
+(require 'sqlplus)
+(add-to-list 'auto-mode-alist '("\\.sqp\\'" . sqlplus-mode))
+
+; Directory of SQL*Plus command history (log) files, or nil (dont generate log files). History file name has format '<connect-string>-history.txt'.
+(setq sqlplus-history-dir "~/sqlplus")
+
+; Directory of SQL*Plus input buffer files, or nil (dont save user session). Session file name has format '<connect-string>.sqp'
+(setq sqlplus-session-cache-dir "~/sqlplus")
+
+; (setq sqlplus-pagesize 0)
+(setq sqlplus-pagesize 50000)
+
+;; http://curiousprogrammer.wordpress.com/2009/07/13/my-emacs-defaults/
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'reverse)
+(setq uniquify-separator "|")
+(setq uniquify-after-kill-buffer-p t)
+(setq uniquify-ignore-buffers-re "^\\*")
+
+;; js2-mode
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+
+
+;; (setq org-publish-project-alist
+;;       '(
+;;        
+;;        
+;;         ("ruf"
+;;          :base-directory "~/Documents/HomeSecurity/RufSpecs/"
+;;          :auto-index nil ; don't generate index.org
+;;          :recursive t
+;;          :base-extension "org"
+;;          :publishing-function org-publish-org-to-pdf
+;;          :table-of-contents nil
+;;          :headline-levels 3
+;;          :auto-preamble t )
+;;        
+;;         )
+;;       )
+
+
+
+
+;; (require 'emms-setup)
+;; (emms-standard)
+;; (emms-default-players)
+
+(put 'narrow-to-region 'disabled nil)
+
+
+; org-mode
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cb" 'org-iswitchb)
+; (transient-mark-mode 1)
+; http://orgmode.org/org.html#TODO-Items
+(setq org-log-done 'time)
+(setq org-log-done 'note)
+; no titles on pages generated by org-mode in latex
+(setq org-export-latex-title-command "")
+; include entries from the Emacs diary into Org-mode's agenda
+(setq org-agenda-include-diary t)
+
+; http://article.gmane.org/gmane.emacs.orgmode/11020
+(setq org-agenda-ndays 1)                   ; I like daily agenda
+(setq org-agenda-skip-deadline-if-done t)
+(setq org-agenda-skip-scheduled-if-done t)
+(setq org-agenda-use-time-grid nil)         ; No need for the scheduling
+
+
+; http://home.fnal.gov/~neilsen/notebook/emacs.html
+(require 'org-export-latex)
+(add-to-list 'org-export-latex-classes 
+'("smarticle" 
+ "\\documentclass[10pt]{article} 
+\\usepackage[utf8]{inputenc} 
+\\usepackage[T1]{fontenc} 
+\\usepackage{graphicx} 
+\\usepackage{longtable} 
+\\usepackage{hyperref}
+\\usepackage[left=1in,top=1in,right=1in,bottom=1in,head=0.2in,foot=0.2in]{geometry}" 
+ ("\\section{%s}" . "\\section*{%s}") 
+ ("\\subsection{%s}" . "\\subsection*{%s}") 
+ ("\\subsubsection{%s}" . "\\subsubsection*{%s}") 
+     ("\\paragraph{%s}" . "\\paragraph*{%s}") 
+     ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+

@@ -2,6 +2,14 @@
 ; (add-to-list 'load-path "~/elisp")
 (add-to-list 'load-path "~/site-lisp")
 (add-to-list 'load-path "~/.elisp")
+(add-to-list 'load-path "~/.emacs.d")
+(add-to-list 'load-path "/usr/share/emacs21/site-lisp/css-mode")
+
+(set-default-font "-b&h-lucidatypewriter-medium-r-normal-sans-17-120-100-100-m-100-iso8859-1")
+(set-foreground-color "Wheat")
+(set-background-color "DarkSlateGray")
+(set-cursor-color "Orchid")
+;; (set-pointer-color "Orchid")
 
 ;; from jay Bingham: http://www.geocrawler.com/archives/3/339/2001/6/0/6064358/
 (defvar tl_dts-format-string "%b %e, %Y %H:%M:%S"

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+xrandr --output DVI1 --auto --right-of LVDS1
+# xrandr --output LVDS --mode 1680x1050 --output TMDS-1 --mode 1680x1050 --right-of LVDS
+
